@@ -1,5 +1,7 @@
 import type { NextPage } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
 import styled from 'styled-components';
 import { useQuery } from 'urql';
 
@@ -21,10 +23,10 @@ const ItemsQuery = `
         }
       }
     } 
-
 `;
 
 const Home: NextPage = () => {
+  const [search, setSearch] = useState('');
   const [result, reexecuteQuery] = useQuery({
     query: ItemsQuery,
   });
@@ -32,13 +34,20 @@ const Home: NextPage = () => {
   const { data, fetching, error } = result;
 
   if (fetching) return <p>Loading</p>;
-
+  console.log(search);
   console.log(error);
   console.log(data);
+
+  const filteredResult = (array: any, query: any) => {
+    return array.filter(
+      (prod: any) => prod.name.toLowerCase().indexOf(query.toLowerCase()) !== -1
+    );
+  };
   return (
     <Content>
+      <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} />
       <ProductsArea>
-        {data.products.map((product: any) => {
+        {filteredResult(data.products, search).map((product: any) => {
           return (
             <ProductCard key={product.id}>
               {' '}
@@ -51,8 +60,9 @@ const Home: NextPage = () => {
                 ></Image>
               </ImageBox>
               <ProductDetails>
-                <ProductTitle>{product.name}33</ProductTitle>
+                <ProductTitle>{product.name}</ProductTitle>
                 <Price>{product.price} ZŁ</Price>
+                <Link href={`/${product.slug}`}>Link</Link>
               </ProductDetails>
             </ProductCard>
           );
@@ -100,4 +110,13 @@ const ImageBox = styled.div`
   margin: 5px auto 5px auto;
 `;
 
-const Price = styled.p``;
+const Price = styled.p`
+  margin-left: auto;
+  margin-right: 5px;
+  font-size: 14px;
+`;
+
+const SearchBar = styled.input`
+  width: 400px;
+  margin: 20px auto;
+`;
