@@ -41,7 +41,9 @@ const Home: NextPage = () => {
   if (fetching)
     return (
       <Layout>
-        <ProductsNsearch>Loading...</ProductsNsearch>
+        <LoadingPlace>
+          <Loading></Loading>
+        </LoadingPlace>
       </Layout>
     );
 
@@ -199,5 +201,37 @@ const ProductsNsearch = styled.div`
   @media (max-width: 625px) {
     margin: 0 auto;
     align-items: center;
+  }
+`;
+
+const LoadingPlace = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 75px;
+`;
+
+const Loading = styled.div`
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+  &:after {
+    content: ' ';
+    display: block;
+    width: 96px;
+    height: 96px;
+    margin: 8px;
+    border-radius: 50%;
+    border: 6px solid #000f;
+    border-color: #000 transparent #000 transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+  }
+  @keyframes lds-dual-ring {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 `;

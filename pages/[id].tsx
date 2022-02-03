@@ -40,7 +40,9 @@ const ProductPage: NextPage = () => {
   if (fetching || !data) {
     return (
       <Layout>
-        <Product>Loading...</Product>
+        <Product>
+          <Loading></Loading>
+        </Product>
       </Layout>
     );
   }
@@ -60,7 +62,14 @@ const ProductPage: NextPage = () => {
         <ProductData>
           <Title>{data.products[0].name}</Title>
           <Description>{data.products[0].description}</Description>
+          <Categories>
+            Categories:
+            {data.products[0].categories.map((category: { name: string }) => {
+              return <Category key={category.name}>{category.name}</Category>;
+            })}
+          </Categories>
           <Price>Price: {data.products[0].price} ZŁ</Price>
+
           <Button onClick={() => dispatch(addToCart(data.products[0]))}>
             Add to Cart
           </Button>
@@ -126,6 +135,17 @@ const Description = styled.p`
   margin-top: 10px;
 `;
 
+const Categories = styled.ul`
+  margin-top: 10px;
+  list-style: none;
+  font-size: 24px;
+`;
+
+const Category = styled.li`
+  font-size: 16px;
+  font-weight: 300;
+`;
+
 const Button = styled.button`
   border: none;
   background: transparent;
@@ -143,5 +163,30 @@ const Button = styled.button`
   @media (max-width: 1350px) {
     margin-top: 15px;
     margin-bottom: 15px;
+  }
+`;
+
+const Loading = styled.div`
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+  &:after {
+    content: ' ';
+    display: block;
+    width: 96px;
+    height: 96px;
+    margin: 8px;
+    border-radius: 50%;
+    border: 6px solid #000f;
+    border-color: #000 transparent #000 transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+  }
+  @keyframes lds-dual-ring {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 `;
