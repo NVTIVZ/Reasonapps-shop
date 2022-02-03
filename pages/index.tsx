@@ -1,9 +1,13 @@
 import type { NextPage } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { useQuery } from 'urql';
+import { addToCart } from '../app/cartSlice';
+import Layout from '../components/Layout';
+import { stateProps } from '../app/cartSlice';
 
 const ItemsQuery = `
   query
@@ -30,70 +34,102 @@ const Home: NextPage = () => {
   const [result, reexecuteQuery] = useQuery({
     query: ItemsQuery,
   });
-
+  const router = useRouter();
+  const dispatch = useDispatch();
   const { data, fetching, error } = result;
 
-  if (fetching) return <p>Loading</p>;
-  console.log(search);
-  console.log(error);
-  console.log(data);
+  if (fetching)
+    return (
+      <Layout>
+        <ProductsNsearch>Loading...</ProductsNsearch>
+      </Layout>
+    );
 
-  const filteredResult = (array: any, query: any) => {
+  const filteredResult = (array: stateProps[], query: string) => {
     return array.filter(
       (prod: any) => prod.name.toLowerCase().indexOf(query.toLowerCase()) !== -1
     );
   };
   return (
-    <Content>
-      <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} />
-      <ProductsArea>
-        {filteredResult(data.products, search).map((product: any) => {
-          return (
-            <ProductCard key={product.id}>
-              {' '}
-              <ImageBox>
-                <Image
-                  src={product.image}
-                  height={192}
-                  width={256}
-                  alt={product.name}
-                ></Image>
-              </ImageBox>
-              <ProductDetails>
-                <ProductTitle>{product.name}</ProductTitle>
-                <Price>{product.price} ZŁ</Price>
-                <Link href={`/${product.slug}`}>Link</Link>
-              </ProductDetails>
-            </ProductCard>
-          );
-        })}
-      </ProductsArea>
-    </Content>
+    <Layout>
+      <ProductsNsearch>
+        <Search>
+          <Image src="/search.svg" width={24} height={24} alt="search" />
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search"
+          />
+        </Search>
+
+        <ProductsArea>
+          {filteredResult(data.products, search).map((product: any) => {
+            return (
+              <ProductCard
+                key={product.id}
+                onClick={() => router.push(`/${product.slug}`)}
+              >
+                {' '}
+                <ImageBox>
+                  <Image
+                    src={product.image}
+                    layout="responsive"
+                    alt={product.name}
+                    height={192}
+                    width={256}
+                  />
+                </ImageBox>
+                <ProductDetails>
+                  <ProductTitle>{product.name}</ProductTitle>
+                  <Price>{product.price} ZŁ</Price>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dispatch(addToCart(product));
+                    }}
+                  >
+                    Add to cart
+                  </Button>
+                </ProductDetails>
+              </ProductCard>
+            );
+          })}
+        </ProductsArea>
+      </ProductsNsearch>
+    </Layout>
   );
 };
 
 export default Home;
 
-const Content = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-`;
-
 const ProductsArea = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  @media (max-width: 1700px) {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  @media (max-width: 1300px) {
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 625px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const ProductCard = styled.div`
-  width: 330px;
+  max-width: 330px;
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.3);
   margin: 10px 10px;
-  border-radius: 4px;
+  transition: 0.5s ease-in-out;
+  cursor: pointer;
+  :hover {
+    transition: 0.5s ease-in-out;
+    opacity: 0.9;
+  }
+  @media (max-width: 625px) {
+    margin: 5px 5px;
+  }
 `;
 
 const ProductDetails = styled.div`
@@ -103,20 +139,65 @@ const ProductDetails = styled.div`
 
 const ProductTitle = styled.p`
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 300;
   margin: 0 auto;
 `;
 const ImageBox = styled.div`
   margin: 5px auto 5px auto;
+  height: 192px;
+  width: 256px;
 `;
 
 const Price = styled.p`
   margin-left: auto;
-  margin-right: 5px;
+  margin-right: auto;
   font-size: 14px;
+  font-weight: 600;
+  margin-top: 5px;
+`;
+
+const Search = styled.div`
+  margin: 20px 65px 20px auto;
+  display: flex;
+  border: solid 2px black;
+  @media (max-width: 895px) {
+    margin: 20px auto;
+  }
 `;
 
 const SearchBar = styled.input`
-  width: 400px;
-  margin: 20px auto;
+  width: 250px;
+  height: 24px;
+  font-size: 20px;
+  background: transparent;
+  border: none;
+  outline: none;
+  margin-left: 5px;
+`;
+
+const Button = styled.button`
+  border: none;
+  background: transparent;
+  border: solid 2px black;
+  width: 120px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: ease-in-out background 0.3s;
+  font-weight: 400;
+  margin: 5px auto;
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const ProductsNsearch = styled.div`
+  margin-left: 25px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  @media (max-width: 625px) {
+    margin: 0 auto;
+    align-items: center;
+  }
 `;
